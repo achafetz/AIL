@@ -3,7 +3,7 @@
 # PURPOSE:  charts for Sheperd Center Talk
 # LICENSE:  MIT
 # DATE:     2021-04-23
-# UPDATED: 
+# UPDATED:  2021-04-27
 
 # DEPENDENCIES ------------------------------------------------------------
   
@@ -18,10 +18,10 @@
   library(glue)
   library(janitor)
   library(readxl)
-library(tidytext)
-library(sf)
-library(rnaturalearth)
-library(gisr)
+  library(tidytext)
+  library(sf)
+  library(rnaturalearth)
+  library(gisr)
   
 
 # GLOBAL VARIABLES --------------------------------------------------------
@@ -154,6 +154,49 @@ library(gisr)
   
   
 
+# NEW HIV INFECTIONS ------------------------------------------------------
+
+  df_hiv_new <- read_csv("Data/new-cases-of-hiv-infection.csv") %>% 
+    clean_names()
+  
+  df_hiv_new_glob <- df_hiv_new %>% 
+    filter(entity == "World")
+  
+  year <- max(df_hiv_new_glob$year)
+  
+  
+  df_hiv_new_glob %>% 
+    ggplot(aes(year, incidence_hiv_aids_sex_both_age_all_ages_number)) +
+    geom_area(fill = "#1B68B3") +
+    geom_text(data = df_hiv_new_glob %>% filter(year == max(year)),
+              aes(label = number(incidence_hiv_aids_sex_both_age_all_ages_number,
+                                 accuracy = .1,
+                                 suffix = "m",
+                                 scale = 1/1000000)),
+              hjust = .2, vjust = .3,
+              family = "Source Sans Pro SemiBold", color = "white") +
+    scale_y_continuous(label = number_format(scale = 1/1000000,
+                                             accuracy = 1,
+                                             suffix = "m"),
+                       position = "right") +
+    scale_x_continuous(breaks = seq(1990, 2017, 5)) +
+    labs(x = NULL, y = "New HIV Infections",
+         caption = glue("through {year}
+                        Source: Our World in Data")) +
+    si_style() +
+    theme(panel.grid.major.x = element_line(color = "white"),
+          panel.grid.major.y = element_line(color = "white"),
+          axis.text.x = element_text(color = "#1B68B3"),
+          axis.text.y = element_text(color = "#1B68B3"),
+          axis.title.y = element_text(color = "#1B68B3"),
+          plot.caption = element_text(color = "white"),
+          plot.background = element_rect(fill = "#A8C5E7", color = "#A8C5E7"))
+  
+  si_save("Images/hiv_new_global.png",
+          width = 8.6, height = 4.84)  
+  
+  
+  
 # HIV DEATHS --------------------------------------------------------------
 
   #source: https://ourworldindata.org/hiv-aids#
@@ -229,6 +272,71 @@ library(gisr)
   si_save("Images/aids_cum_deaths.png",
           width = 8.6, height = 4.84)  
 
+  
+
+
+# COVID CASES - SELECT COUNTRIES ------------------------------------------
+
+  #source: https://ourworldindata.org/explorers/coronavirus-data-explorer?yScale=log&zoomToSelection=true&time=2020-10-16..latest&pickerSort=desc&pickerMetric=total_cases&hideControls=true&Metric=Confirmed+cases&Interval=7-day+rolling+average&Relative+to+Population=false&Align+outbreaks=false&country=USA~IND~ZAF
+  df_covid_ctry <- read_csv("Data/owid-covid-data.csv") %>% 
+    clean_names()
+  
+  df_covid_ctry_sel <- df_covid_ctry %>% 
+    filter(iso_code %in% c("USA","IND", "ZAF")) 
+
+  date <- max(df_covid_ctry_sel$date)
+  
+  df_covid_ctry_sel %>% 
+    filter(date < "2020-05-01",
+           iso_code %in% c("USA","ZAF")) %>% 
+    ggplot(aes(date, new_cases_smoothed_per_million, group = location)) +
+    geom_path(color = "#1B68B3", size =1.12) +
+    facet_wrap(~location) +
+    scale_x_date(date_labels = "%b %y") +
+    scale_y_continuous(position = "right") +
+    si_style() +
+    labs(x = NULL, y = "new COVID cases (per million)",
+         caption = glue("through {date}
+                        Source: Our World in Data")) +
+    si_style() +
+    theme(panel.grid.major.x = element_line(color = "white"),
+          panel.grid.major.y = element_line(color = "white"),
+          axis.text.x = element_text(color = "#1B68B3"),
+          axis.text.y = element_text(color = "#1B68B3"),
+          axis.title.y = element_text(color = "#1B68B3"),
+          strip.text = element_text(color = "#1B68B3"),
+          plot.caption = element_text(color = "white"),
+          plot.background = element_rect(fill = "#A8C5E7", color = "#A8C5E7"))
+  
+  si_save("Images/us_zaf_covid.png",
+          width = 8.6, height = 4.84) 
+  
+  df_covid_ctry_sel %>% 
+    filter(iso_code %in% c("USA","ZAF")) %>% 
+    ggplot(aes(date, new_cases_smoothed_per_million, group = location)) +
+    geom_path(color = "#1B68B3", size =1.12) +
+    facet_wrap(~location) +
+    scale_x_date(date_labels = "%b %y") +
+    scale_y_continuous(position = "right") +
+    si_style() +
+    labs(x = NULL, y = "new COVID cases (per million)",
+         caption = glue("through {date}
+                        Source: Our World in Data")) +
+    si_style() +
+    theme(panel.grid.major.x = element_line(color = "white"),
+          panel.grid.major.y = element_line(color = "white"),
+          axis.text.x = element_text(color = "#1B68B3"),
+          axis.text.y = element_text(color = "#1B68B3"),
+          axis.title.y = element_text(color = "#1B68B3"),
+          strip.text = element_text(color = "#1B68B3"),
+          plot.caption = element_text(color = "white"),
+          plot.background = element_rect(fill = "#A8C5E7", color = "#A8C5E7"))
+  
+  si_save("Images/us_zaf_covid_full.png",
+          width = 8.6, height = 4.84)  
+  
+  
+    
 # LEADING CAUSE OF DEATH --------------------------------------------------
 
   #source:https://www.who.int/data/gho/data/themes/mortality-and-global-health-estimates/ghe-leading-causes-of-death
